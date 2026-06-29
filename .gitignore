@@ -1,0 +1,25 @@
+# Thư mục thư viện PHP & Node
+src/vendor/
+src/node_modules/
+
+# Tệp môi trường chứa mật khẩu
+src/.env
+
+# Thư mục lưu trữ tạm của Laravel
+src/storage/framework/cache/data/*
+src/storage/framework/sessions/*
+src/storage/framework/testing/*
+src/storage/framework/views/*
+src/storage/logs/*
+
+# Cache khởi động
+src/bootstrap/cache/*
+!src/bootstrap/cache/.gitignore
+
+# IDEs & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+src/demo_he_thong.mp4
