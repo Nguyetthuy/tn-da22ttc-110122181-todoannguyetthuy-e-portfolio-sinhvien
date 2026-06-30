@@ -12,7 +12,7 @@
 
 ### Phân hệ Cố vấn học tập
 *   **Danh sách quản lý:** Hiển thị danh sách các lớp hành chính cố vấn đang phụ trách (bao gồm tên lớp, niên khóa bắt đầu/kết thúc, sĩ số lớp hiện tại, chương trình đào tạo tương ứng).
-*   **Thống kê lớp cố vấn:** Đếm tổng số sinh viên thuộc tất cả các lớp đang phụ trách và tổng số lớp đang quản lý trực tiếp.
+*   **Thống kê lớp cố vấn:** Đếm tổng số sinh viên thuộc tất cả các lớp phụ trách và tổng số lớp đang quản lý trực tiếp.
 
 ---
 
