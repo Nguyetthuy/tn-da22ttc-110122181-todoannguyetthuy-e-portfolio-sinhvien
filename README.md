@@ -1,4 +1,4 @@
-# HỆ THỐNG PORTFOLIO ĐIỆN TỬ (E-PORTFOLIO)THEO DÕI NĂNG LỰC HỌC TẠP CỦA SINH VIÊN THEO CHUẨN ĐẦU RA
+# HỆ THỐNG PORTFOLIO ĐIỆN TỬ (E-PORTFOLIO)THEO DÕI NĂNG LỰC HỌC TẬP CỦA SINH VIÊN THEO CHUẨN ĐẦU RA
 
 Đồ án này tập trung vào việc phát triển phân hệ **Sinh viên** và **Cố vấn học tập** được cô lập hoàn toàn thành một chương trình chạy độc lập từ hệ thống gốc. 
 
@@ -6,7 +6,7 @@
 ## 1. Các Chức Năng Hiện Tại
 
 ### Phân hệ Sinh viên
-*   **Thông tin cá nhân & Đào tạo:** Xem lý lịch cá nhân sinh viên, thông tin niên khóa tuyển sinh, chương trình đào tạo và Cố vấn học tập trực tiếp phụ trách.
+*   **Thông tin cá nhân và chương trình đào tạo:** Xem lý lịch cá nhân sinh viên, thông tin niên khóa tuyển sinh, chương trình đào tạo và Cố vấn học tập trực tiếp phụ trách.
 *   **Thống kê tổng hợp:** Xem các chỉ số đếm số môn học đã tham gia, số học kỳ tích lũy và tỷ lệ đạt chuẩn đầu ra chương trình (PLO) của bản thân.
 *   **Tương tác AI (Gemini Chatbot):** Tích hợp cửa sổ chat bong bóng nổi sử dụng API Gemini hỗ trợ sinh viên trao đổi, giải đáp trực tiếp về các thắc mắc học tập, PLO, CLO của bản thân.
 
