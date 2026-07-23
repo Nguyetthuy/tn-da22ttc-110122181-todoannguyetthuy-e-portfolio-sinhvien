@@ -371,7 +371,6 @@
 <!-- Nút bong bóng chat (Floating Button) -->
 <button id="gemini-chat-toggle" class="gemini-fab">
   <i class="fas fa-robot"></i>
-  <span class="gemini-fab-tooltip">Trợ lý Gemini 2.5</span>
 </button>
 
 <!-- Hộp thoại chat ẩn/hiện (Chat Window) -->
@@ -458,6 +457,10 @@
 
   .gemini-fab:hover .gemini-fab-tooltip {
     opacity: 1;
+  }
+
+  .gemini-fab.active .gemini-fab-tooltip {
+    display: none !important;
   }
 
   /* Khung chat thiết kế Glassmorphism hiện đại */
@@ -696,16 +699,22 @@
 
   marked.setOptions({ breaks: true });
 
-  // Toggle ẩn/hiện cửa sổ chat
+  // [Giải thích]: Lắng nghe sự kiện click vào nút biểu tượng Chatbot (Floating Button)
+  // - Khi click: Bật/Tắt class 'active' của cửa sổ chat (geminiWindow) và nút bấm (geminiToggle).
+  // - Nếu cửa sổ chat mở ra (active), tự động đưa con trỏ chuột tập trung vào ô nhập liệu (geminiInput).
   geminiToggle.addEventListener('click', () => {
     geminiWindow.classList.toggle('active');
+    geminiToggle.classList.toggle('active');
     if (geminiWindow.classList.contains('active')) {
       geminiInput.focus();
     }
   });
 
+  // [Giải thích]: Lắng nghe sự kiện click vào nút Đóng (x) trên header cửa sổ chat
+  // - Khi click: Loại bỏ class 'active' để ẩn cửa sổ chat và tắt trạng thái hoạt động của nút biểu tượng.
   geminiClose.addEventListener('click', () => {
     geminiWindow.classList.remove('active');
+    geminiToggle.classList.remove('active');
   });
 
   // Thêm tin nhắn vào khung chat

@@ -72,6 +72,10 @@ class SVHomeController extends Controller
 
 
         // 7. Số lượng chuẩn đầu ra PLO đã đạt của sinh viên (loại bỏ trùng lặp, lọc theo khóa tuyển sinh và tính theo mã VB)
+        // [Giải thích]: Thực hiện đếm số lượng các PLO mà sinh viên đã tích lũy đạt chuẩn đầu ra.
+        // - Một PLO được xem là ĐẠT nếu tổng tỷ lệ phần trăm đóng góp (ty_le_dong_gop) của tất cả các môn học đã vượt qua 
+        //   (có tỷ lệ đạt của môn đó ty_le_dat >= 40%) tích lũy lại lớn hơn hoặc bằng 70% (mức độ hoàn thành >= 70%).
+        // - Kết quả trả về: Một số nguyên biểu thị số lượng PLO đạt chuẩn đầu ra (ví dụ: 10).
         $countPLODat = DB::table('thongke_plo_sinhvien')
             ->join('cdr_ctdt', 'thongke_plo_sinhvien.maCDR_CTDT', '=', 'cdr_ctdt.maCDR_CTDT')
             ->join('khoa_tuyensinh_ct_daotao', 'cdr_ctdt.maCDR_CTDT', '=', 'khoa_tuyensinh_ct_daotao.maCDR_CTDT')
@@ -81,7 +85,7 @@ class SVHomeController extends Controller
             ->where('khoa_tuyensinh_ct_daotao.isDelete', false)
             ->where('cdr_ctdt.isDelete', false)
             ->groupBy('cdr_ctdt.maCDR_CTDT_VB')
-            ->having(DB::raw('SUM(CASE WHEN thongke_plo_sinhvien.ty_le_dat >= 40 THEN thongke_plo_sinhvien.ty_le_dong_gop ELSE 0 END)'), '>=', 50)
+            ->having(DB::raw('SUM(CASE WHEN thongke_plo_sinhvien.ty_le_dat >= 40 THEN thongke_plo_sinhvien.ty_le_dong_gop ELSE 0 END)'), '>=', 70)
             ->get()
             ->count();
 

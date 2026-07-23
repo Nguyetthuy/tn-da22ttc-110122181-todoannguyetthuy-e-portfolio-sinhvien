@@ -102,9 +102,12 @@ class SVGeminiController extends Controller
                 ->groupBy('cdr_ctdt.maCDR_CTDT', 'cdr_ctdt.maCDR_CTDT_VB', 'cdr_ctdt.tenCDR_CTDT')
                 ->get();
 
-            // PLO được coi là ĐẠT nếu tổng tỷ lệ tích lũy của nó >= 50%
+            // PLO được coi là ĐẠT nếu tổng tỷ lệ tích lũy của nó >= 70%
+            // [Giải thích]: Lọc ra danh sách các PLO mà sinh viên đã đạt (có mức độ hoàn thành >= 70%).
+            // - Giá trị đầu vào: Danh sách kết quả tích lũy các PLO của sinh viên.
+            // - Giá trị trả về: Một Collection gồm các PLO thỏa mãn điều kiện tích lũy >= 70%.
             $achievedPLOs = $ploAchievements->filter(function ($item) {
-                return $item->ty_le_dat_tb >= 50;
+                return $item->ty_le_dat_tb >= 70;
             });
             $soPloDat = $achievedPLOs->count();
 
@@ -201,9 +204,12 @@ class SVGeminiController extends Controller
                 foreach ($groupedByHp as $hpId => $records) {
                     $first = $records->first();
                     $fcPlos = [];
+                    // [Giải thích]: Định dạng thông tin kết quả CĐR chưa đạt cho mỗi môn học dưới dạng điểm số 10.
+                    // - Không hiển thị thông tin môn đó thuộc nhóm CĐR nào để Chatbot không đưa thông tin nhóm vào câu trả lời.
+                    // - Giá trị xử lý: ty_le_dat (từ 0 - 100) được chia cho 10 để ra thang điểm 10.
                     foreach ($records as $r) {
                         $groupName = $r->tenNhomDR ?? 'Kiến thức';
-                        $fcPlos[] = "  * PLO chưa đạt: {$r->maCDR_CTDT_VB} - {$r->tenCDR_CTDT} (Tỉ lệ đạt: {$r->ty_le_dat}%, Thuộc nhóm: {$groupName})";
+                        $fcPlos[] = "  * PLO chưa đạt: {$r->maCDR_CTDT_VB} - {$r->tenCDR_CTDT} (Điểm CĐR học phần đạt: " . number_format($r->ty_le_dat / 10, 1) . "/10)";
                     }
                     $failedCoursesWithPlos[] = "- Học phần: {$first->maHocPhan_VB} - {$first->tenHocPhan}\n" . implode("\n", $fcPlos);
                 }
@@ -265,9 +271,24 @@ class SVGeminiController extends Controller
         $context .= "2. Biểu đồ Heatmap 'Tỷ lệ đóng góp CĐR theo Học kỳ' (ID: heatmapChart):\n";
         $context .= "   - Ý nghĩa: Cho biết mức độ đóng góp (tác động) của các môn học trong từng học kỳ cụ thể vào việc tích lũy chuẩn đầu ra PLO.\n";
         $context .= "   - Cách đọc: Trục ngang hiển thị các PLO, trục dọc hiển thị các học kỳ. Mỗi ô chứa một số là tỷ lệ đóng góp (phần trăm). Màu sắc ô càng đậm màu xanh dương thể hiện học kỳ đó đóng góp (tác động) càng lớn cho PLO tương ứng. Các ô nhạt hoặc màu trắng/xám thể hiện học kỳ đó ít hoặc chưa đóng góp cho PLO tương ứng.\n\n";
+        
+        $context .= "\n--- KIẾN THỨC VỀ CHUẨN ĐẦU RA (PLO & CLO) ---\n";
+        $context .= "Sử dụng các định nghĩa và kiến thức sau để giải thích cho sinh viên khi họ hỏi về PLO và CLO:\n";
+        $context .= "- PLO (Chuẩn đầu ra chương trình đào tạo) là những nội dung cụ thể hóa các mục tiêu của chương trình đào tạo, được trình bày thành một danh sách các chuẩn có thể đánh giá được.\n";
+        $context .= "- PLO là khởi điểm của toàn bộ quy trình thiết kế CTĐT, đảm bảo các hoạt động học tập của người học phải được truyền tải thành những kết quả có thể quan sát, đo lường và đánh giá được.\n";
+        $context .= "- CLO (Chuẩn đầu ra học phần - Course Learning Outcomes) là những kết quả học tập mong đợi mà người học có thể đạt được và thể hiện được sau khi hoàn thành một học phần cụ thể.\n";
+        $context .= "- CLO của tất cả các học phần bắt buộc phải được thiết kế sao cho phù hợp, tương thích và đóng góp trực tiếp vào việc đạt được PLO chung của toàn bộ Chương trình đào tạo. Mối liên hệ và mức độ đóng góp này được hệ thống hóa thông qua một Ma trận chuẩn đầu ra, giúp xác định rõ ràng môn học nào đảm nhiệm việc bồi dưỡng kiến thức, kỹ năng hay thái độ nào cho sinh viên.\n";
+        $context .= "- Mức độ hoàn thành của mỗi PLO (tỷ lệ % tích lũy PLO) được tính từ tổng phần trăm tỷ lệ đóng góp của các học phần (môn học) đã đạt chuẩn đầu ra (điểm CĐR học phần >= 4.0/10 hoặc tỷ lệ đạt >= 40%) đóng góp vào PLO đó.\n\n";
+
+        // [Giải thích]: Định nghĩa cách Chatbot trả lời câu hỏi và hướng xử lý các giá trị điểm số
+        // - Trực quan hóa điểm số bằng thang điểm 10 thay vì %.
+        // - Không ghi rõ thông tin nhóm PLO (Kiến thức/Kỹ năng/Thái độ) của từng môn học khi trả lời cải thiện học tập.
         $context .= "\nHướng dẫn trả lời:\n";
-        $context .= "- Hãy trả lời câu hỏi của sinh viên một cách thân thiện, ngắn gọn, xưng hô 'mình' - 'bạn'.\n";
-        $context .= "- Khi sinh viên hỏi về tình hình học tập hoặc chuẩn đầu ra, hãy phân tích cho sinh viên thấy họ đang đạt được bao nhiêu % ở mỗi nhóm (Kiến thức, Kỹ năng, Thái độ), những chuẩn đầu ra nào thuộc nhóm Kỹ năng chưa đạt.\n";
+        $context .= "- Hãy trả lời câu hỏi của sinh viên một cách thân thiện, ngắn gọn, đi thẳng vào trọng tâm, xưng hô 'mình' - 'bạn'.\n";
+        $context .= "- Nếu sinh viên hỏi về cách tính điểm tích lũy PLO hoặc mức độ hoàn thành PLO được tính từ đâu, hãy giải thích rõ ràng: Mức độ hoàn thành (%) của một PLO được tính từ tổng tỷ lệ phần trăm đóng góp của các học phần đã đạt chuẩn đầu ra (điểm CĐR học phần đạt >= 4.0/10) đóng góp vào PLO tương ứng đó.\n";
+        $context .= "- Nếu sinh viên hỏi về cách cải thiện học tập/CĐR, hãy trả lời đúng trọng tâm: Chỉ ra các học phần và chuẩn đầu ra chưa đạt tối đa kèm theo gợi ý cải thiện cụ thể cho học phần đó. Tuyệt đối KHÔNG chúc mừng rườm rà, KHÔNG liệt kê lại số lượng/tỷ lệ các nhóm PLO đã hoàn thành (như đạt 12/12 PLO, đạt 100% nhóm kiến thức/kỹ năng/thái độ...), không nói dòng vo.\n";
+        $context .= "- Để tránh lặp lại cùng một gợi ý cải thiện nhiều lần cho cùng một học phần, hãy nhóm các PLO chưa đạt của cùng một học phần lại và đưa ra một gợi ý cải thiện chung ngắn gọn, dễ hiểu.\n";
+        $context .= "- Đối với các học phần chưa đạt chuẩn đầu ra (PLO), hãy luôn báo cáo điểm số CĐR của học phần dưới dạng thang điểm 10 (ví dụ: 'Điểm CĐR học phần đạt: 0.0/10' hoặc '2.5/10' thay vì dùng tỷ lệ phần trăm) để sinh viên nắm bắt kết quả rõ ràng. Tuyệt đối không đề cập đến việc học phần hay PLO đó thuộc về nhóm CĐR nào (như thuộc nhóm Kiến thức, Kỹ năng, Thái độ).\n";
         $context .= "- Hãy chủ động nêu rõ các kỹ năng chưa đạt để sinh viên dễ dàng định hướng cải thiện.\n";
         $context .= "- Nếu sinh viên hỏi về việc giải thích các biểu đồ ở trang chuẩn đầu ra, hãy dùng thông tin giải thích biểu đồ ở trên để giải thích rõ ràng, súc tích và dễ hiểu nhất.\n";
         $context .= "- Tuyệt đối sử dụng dữ liệu bối cảnh ở trên để trả lời. Không được bịa đặt dữ liệu của sinh viên. Nếu câu hỏi nằm ngoài bối cảnh trên, hãy trả lời lịch sự và đề xuất sinh viên liên hệ Phòng đào tạo hoặc Cố vấn học tập.\n\n";
@@ -275,7 +296,7 @@ class SVGeminiController extends Controller
         // 4. Gộp bối cảnh vào câu hỏi của sinh viên
         $promptFull = $context . "Câu hỏi của sinh viên: " . $request->input('prompt');
 
-        $models = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+        $models = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-3.5-flash'];
         $lastError = '';
         $statusCode = 500;
 

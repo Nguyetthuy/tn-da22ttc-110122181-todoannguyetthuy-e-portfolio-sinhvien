@@ -79,10 +79,88 @@ class CoVanThongKeController extends Controller
         ->groupBy('maHKNH', 'maHocPhan', 'maLop')
         ->get();
 
+    // 5. Thống kê PLO lớp học
+    $lopInfo = DB::table('lop_hanh_chinh')
+        ->where('maLop', $maLop)
+        ->where('isDelete', false)
+        ->first();
+
+    $students = DB::table('sinh_vien')
+        ->where('maLop', $maLop)
+        ->where('isDelete', false)
+        ->select('maSSV')
+        ->get();
+
+    $student_ids = $students->pluck('maSSV')->toArray();
+    $total_students = count($students);
+
+    $plo_stats = [];
+    if ($lopInfo) {
+        $plos = DB::table('cdr_ctdt')
+            ->join('khoa_tuyensinh_ct_daotao', 'cdr_ctdt.maCDR_CTDT', '=', 'khoa_tuyensinh_ct_daotao.maCDR_CTDT')
+            ->where('khoa_tuyensinh_ct_daotao.maCT', $lopInfo->maCT)
+            ->where('khoa_tuyensinh_ct_daotao.maKhoaTuyenSinh', $lopInfo->maKhoaTuyenSinh)
+            ->where('cdr_ctdt.isDelete', false)
+            ->where('khoa_tuyensinh_ct_daotao.isDelete', false)
+            ->select('cdr_ctdt.maCDR_CTDT', 'cdr_ctdt.maCDR_CTDT_VB', 'cdr_ctdt.tenCDR_CTDT')
+            ->distinct()
+            ->get()
+            ->sortBy(function($item) {
+                return preg_replace_callback('/\d+/', function($m) {
+                    return sprintf('%04d', $m[0]);
+                }, $item->maCDR_CTDT_VB);
+            })
+            ->values();
+
+        foreach ($plos as $plo) {
+            $plo_stats[$plo->maCDR_CTDT] = [
+                'maCDR_CTDT_VB'  => $plo->maCDR_CTDT_VB,
+                'tenCDR_CTDT'    => $plo->tenCDR_CTDT,
+                'dat'            => 0,
+                'chua_dat'       => $total_students,
+                'ty_le_dat'      => 0.0,
+                'ty_le_chua_dat' => 100.0,
+            ];
+        }
+
+        if ($total_students > 0) {
+            $plo_scores = DB::table('thongke_plo_sinhvien')
+                ->join('cdr_ctdt', 'thongke_plo_sinhvien.maCDR_CTDT', '=', 'cdr_ctdt.maCDR_CTDT')
+                ->join('khoa_tuyensinh_ct_daotao', 'cdr_ctdt.maCDR_CTDT', '=', 'khoa_tuyensinh_ct_daotao.maCDR_CTDT')
+                ->whereIn('thongke_plo_sinhvien.maSSV', $student_ids)
+                ->where('cdr_ctdt.isDelete', false)
+                ->where('khoa_tuyensinh_ct_daotao.isDelete', false)
+                ->where('khoa_tuyensinh_ct_daotao.maCT', $lopInfo->maCT)
+                ->where('khoa_tuyensinh_ct_daotao.maKhoaTuyenSinh', $lopInfo->maKhoaTuyenSinh)
+                ->select(
+                    'thongke_plo_sinhvien.maSSV',
+                    'cdr_ctdt.maCDR_CTDT',
+                    DB::raw('100 - SUM(CASE WHEN thongke_plo_sinhvien.ty_le_dat < 40 THEN thongke_plo_sinhvien.ty_le_dong_gop ELSE 0 END) as ty_le_dat_tb')
+                )
+                ->groupBy('thongke_plo_sinhvien.maSSV', 'cdr_ctdt.maCDR_CTDT')
+                ->get();
+
+            foreach ($plo_scores as $score) {
+                if (isset($plo_stats[$score->maCDR_CTDT])) {
+                    if ($score->ty_le_dat_tb >= 70) {
+                        $plo_stats[$score->maCDR_CTDT]['dat']++;
+                        $plo_stats[$score->maCDR_CTDT]['chua_dat']--;
+                    }
+                }
+            }
+
+            foreach ($plo_stats as $key => $stat) {
+                $plo_stats[$key]['ty_le_dat'] = round(($stat['dat'] / $total_students) * 100, 2);
+                $plo_stats[$key]['ty_le_chua_dat'] = round(($stat['chua_dat'] / $total_students) * 100, 2);
+            }
+        }
+    }
+
     return view('covan.thongkelop_hocky', [
-        'giangday'  => $gd_data,
-        'tonghopgd' => $tonghopgd,
-        'maLop'     => $maLop
+        'giangday'   => $gd_data,
+        'tonghopgd'  => $tonghopgd,
+        'maLop'      => $maLop,
+        'plo_stats'  => $plo_stats,
     ]);
 }
 

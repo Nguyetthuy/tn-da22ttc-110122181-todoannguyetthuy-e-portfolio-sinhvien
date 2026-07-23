@@ -109,6 +109,82 @@
 
                     </div>
                 </div>
+
+                {{-- Bắt đầu phần thống kê PLO mới --}}
+                <div class="card card-success card-outline mt-4">
+                    <div class="card-header">
+                        <h3 class="card-title" style="font-size: 1.2rem;">
+                            <i class="fas fa-chart-pie mr-2 text-success"></i> 
+                            Thống kê tỷ lệ đạt Chuẩn đầu ra Chương trình đào tạo (PLO) của lớp: <b class="text-danger">{{ $maLop }}</b>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        @if(!empty($plo_stats))
+                            <div class="alert alert-info shadow-sm border-0">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <b>Tiêu chí đạt PLO:</b> Sinh viên có mức độ hoàn thành PLO <b>>= 70%</b> được tính là <b>Đạt</b> PLO đó.
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-hover">
+                                    <thead>
+                                        <tr class="bg-light text-center" style="font-size: 0.9rem;">
+                                            <th style="width: 10%;">Chuẩn đầu ra</th>
+                                            <th style="width: 45%; text-align: left;">Mô tả nội dung</th>
+                                            <th style="width: 15%;">Đạt</th>
+                                            <th style="width: 15%;">Chưa đạt</th>
+                                            <th style="width: 15%;">Tỷ lệ Đạt / Chưa đạt</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($plo_stats as $plo_id => $stat)
+                                            <tr>
+                                                <td class="text-center font-weight-bold" style="vertical-align: middle;">
+                                                    <span class="badge badge-success px-2 py-1">{{ $stat['maCDR_CTDT_VB'] }}</span>
+                                                </td>
+                                                <td style="vertical-align: middle;">
+                                                    <span class="text-dark font-weight-bold" style="font-size: 0.95rem;">{{ $stat['tenCDR_CTDT'] }}</span>
+                                                </td>
+                                                <td class="text-center" style="vertical-align: middle;">
+                                                    <b class="text-success">{{ $stat['dat'] }} SV</b>
+                                                    <span class="text-muted d-block" style="font-size: 0.85rem;">({{ $stat['ty_le_dat'] }}%)</span>
+                                                </td>
+                                                <td class="text-center" style="vertical-align: middle;">
+                                                    <b class="text-danger">{{ $stat['chua_dat'] }} SV</b>
+                                                    <span class="text-muted d-block" style="font-size: 0.85rem;">({{ $stat['ty_le_chua_dat'] }}%)</span>
+                                                </td>
+                                                <td style="vertical-align: middle;">
+                                                    <div class="progress shadow-sm" style="height: 20px; border-radius: 10px; overflow: hidden;">
+                                                        <div class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" 
+                                                             style="width: {{ $stat['ty_le_dat'] }}%; font-weight: bold;" 
+                                                             aria-valuenow="{{ $stat['ty_le_dat'] }}" aria-valuemin="0" aria-valuemax="100">
+                                                            @if($stat['ty_le_dat'] > 15)
+                                                                {{ $stat['ty_le_dat'] }}%
+                                                            @endif
+                                                        </div>
+                                                        <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" role="progressbar" 
+                                                             style="width: {{ $stat['ty_le_chua_dat'] }}%; font-weight: bold;" 
+                                                             aria-valuenow="{{ $stat['ty_le_chua_dat'] }}" aria-valuemin="0" aria-valuemax="100">
+                                                            @if($stat['ty_le_chua_dat'] > 15 && $stat['ty_le_dat'] <= 85)
+                                                                {{ $stat['ty_le_chua_dat'] }}%
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="text-center text-warning p-4">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2 text-warning"></i>
+                                <p class="lead font-weight-bold">Chưa có thông tin chuẩn đầu ra (PLO) cho chương trình đào tạo của lớp này!</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+                {{-- Kết thúc phần thống kê PLO mới --}}
+
             </div>
         </section>
     </div>

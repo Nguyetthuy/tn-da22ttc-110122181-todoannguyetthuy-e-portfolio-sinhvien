@@ -370,7 +370,15 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             },
             legend: { show: false },
-            stroke: { width: 0 },
+            // [Giải thích]: Cấu hình hiển thị đường viền ngăn cách các ô màu trên biểu đồ Heatmap.
+            // - show: true (cho phép vẽ đường viền ngăn cách)
+            // - width: 2 (độ dày đường viền là 2px)
+            // - colors: ['#ffffff'] (màu trắng giúp tách biệt rõ nét giữa các mức độ đóng góp khác nhau)
+            stroke: {
+                show: true,
+                width: 2,
+                colors: ['#ffffff']
+            },
             xaxis: {
                 labels: { 
                     style: { 
